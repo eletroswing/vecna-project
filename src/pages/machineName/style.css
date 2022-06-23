@@ -1,0 +1,25 @@
+#Container {
+  margin: 0 auto;
+  text-align: center;
+  align-items: center;
+}
+
+#ModelViwer {
+    width: 100%;
+    height: 400px;
+}
+
+@media (min-width: 920px)
+{
+    #Centered {
+        width: 50%;
+        margin: auto;
+    }
+}
+
+@media (max-width: 920px)
+{
+    #Centered {
+        width: 100%;
+    }
+}

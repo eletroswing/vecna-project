@@ -6,6 +6,9 @@ import { Toaster } from "react-hot-toast";
 
 import App from './App'
 import Machine from './pages/machineName';
+import User from './pages/UserPage';
+
+import ListMachines from './pages/ListMachines';
 
 import Navbar from './components/navbar';
 import { FirebaseAuthProvider } from './components/FirebaseProvider';
@@ -20,7 +23,13 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       />
       <Navbar />
       <Routes>
-        <Route path="/:machineName" element={<Machine />} />
+        <Route path="/:user" element={<User />} />
+          <Route path="/:user/:machineName" element={<Machine />} />
+
+        <Route path="/" element={<ListMachines />} />
+
+        {/* this is any route */}
+        <Route path="/404" element={<App />} />
         <Route path="/*" element={<App />} />
       </Routes>
     </BrowserRouter>
