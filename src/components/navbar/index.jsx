@@ -1,5 +1,6 @@
 import * as React from "react";
 import "./style.css";
+import { Link, useLocation } from "react-router-dom";
 import { toast } from "react-hot-toast";
 
 import { useFirebaseAuth } from "../FirebaseProvider";
@@ -19,7 +20,7 @@ function ActionLogin() {
         <img
           width="20px"
           className="me-2"
-          src="./../../../public/google-logo.png"
+          src="https://imagensemoldes.com.br/wp-content/uploads/2020/04/imagem-google-logo-com-fundo-transparente-1.png"
         />
         Entrar com Google
       </button>
@@ -27,7 +28,7 @@ function ActionLogin() {
   );
 }
 
-function MakeLogout(e){
+function MakeLogout(e) {
   e.preventDefault();
   let logout = Logout();
   if (logout === undefined) {
@@ -47,31 +48,79 @@ function MakeLogout(e){
       },
     });
   }
-};
+}
 
+function ReturnLinks({ className }) {
+  const location = useLocation();
+
+  const links = [
+    { name: "Máquinas", to: "/" },
+    { name: "Perfil", to: "/me" },
+  ];
+
+  return (
+    <div className={className}>
+      {links.map((e) => {
+        console.log(e);
+        if (location.pathname === e.to) {
+          return (
+            <Link
+              class="nav-link text-white active"
+              aria-current="page"
+              to={e.to}
+            >
+              {e.name}
+            </Link>
+          );
+        }else{
+          return (
+            <Link
+              class="nav-link text-white-50"
+              aria-current="page"
+              to={e.to}
+            >
+              {e.name}
+            </Link>
+          );
+        }
+      })}
+    </div>
+  );
+}
 
 function ActionProfile() {
   const user = useFirebaseAuth();
-
   return (
     <div>
-      <a
-        href="#"
-        className="d-block link-light text-decoration-none dropdown-toggle show"
-        id="dropdownUser1"
-        data-bs-toggle="modal"
-        data-bs-target="#staticBackdrop"
-        aria-expanded="true"
-      >
-        <img
-          src={user?.photoURL}
-          alt="mdo"
-          width="40"
-          height="40"
-          referrerPolicy="no-referrer"
-          className="rounded-circle"
-        />
-      </a>
+      <div class="dropdown text-end">
+        <a
+          href="#"
+          class="d-block link-light text-decoration-none dropdown-toggle show"
+          id="dropdownUser1"
+          data-bs-toggle="dropdown"
+          aria-expanded="true"
+        >
+          <img
+            src={user?.photoURL}
+            alt="mdo"
+            width="40"
+            referrerPolicy="no-referrer"
+            height="40"
+            class="rounded-circle"
+          />
+        </a>
+        <ul
+          class="dropdown-menu text-small"
+          aria-labelledby="dropdownUser1"
+          data-popper-placement="bottom-end"
+        >
+          <li>
+            <a class="dropdown-item" href="" onClick={MakeLogout}>
+              Sign out
+            </a>
+          </li>
+        </ul>
+      </div>
     </div>
   );
 }
@@ -82,84 +131,66 @@ export default function Navbar() {
 
   return (
     <div>
-      <div
-        class="modal fade"
-        id="staticBackdrop"
-        data-bs-backdrop="static"
-        data-bs-keyboard="false"
-        tabindex="-1"
-        aria-labelledby="staticBackdropLabel"
-        aria-hidden="true"
-      >
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h5 className="modal-title" id="staticBackdropLabel">
-                Opções
-              </h5>
-              <button
-                type="button"
-                className="btn-close"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-              ></button>
+      <nav class="p-3 mb-3 bg-dark border-bottom">
+        <div class="container-fluid">
+          <div class="d-flex flex-wrap align-items-center justify-content-start">
+            <div className="nav col-auto me-auto mb-2 justify-content-center mb-md-0 px-3">
+              <a
+                class="btn btn-outline-dark text-white-50 d-block d-sm-none"
+                data-bs-toggle="collapse"
+                href="#collapseExample"
+                role="button"
+                aria-expanded="false"
+                aria-controls="collapseExample"
+              >
+                <svg
+                  width="32px"
+                  height="32px"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  class="feather feather-menu"
+                >
+                  <line x1="3" y1="12" x2="21" y2="12"></line>
+                  <line x1="3" y1="6" x2="21" y2="6"></line>
+                  <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+              </a>
+              <div className="d-none d-sm-block">
+                <div className="d-flex flex-row">
+                  <a className="text-white ps-3" href="#">
+                    <svg
+                      className="bi me-2 bi-wrench-adjustable-circle"
+                      width="50"
+                      height="40"
+                      role="img"
+                      aria-label="Bootstrap"
+                      fill="currentColor"
+                      viewBox="0 0 16 16"
+                      onClick={(e) => {
+                        e.preventDefault();
+                      }}
+                    >
+                      <path d="M12.496 8a4.491 4.491 0 0 1-1.703 3.526L9.497 8.5l2.959-1.11c.027.2.04.403.04.61Z" />
+                      <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0Zm-1 0a7 7 0 1 0-13.202 3.249l1.988-1.657a4.5 4.5 0 0 1 7.537-4.623L7.497 6.5l1 2.5 1.333 3.11c-.56.251-1.18.39-1.833.39a4.49 4.49 0 0 1-1.592-.29L4.747 14.2A7 7 0 0 0 15 8Zm-8.295.139a.25.25 0 0 0-.288-.376l-1.5.5.159.474.808-.27-.595.894a.25.25 0 0 0 .287.376l.808-.27-.595.894a.25.25 0 0 0 .287.376l1.5-.5-.159-.474-.808.27.596-.894a.25.25 0 0 0-.288-.376l-.808.27.596-.894Z" />
+                    </svg>
+                  </a>
+                  <nav class="nav">
+                    <ReturnLinks className="d-flex flex-row" />
+                  </nav>
+                </div>
+              </div>
             </div>
-            <div className="modal-body">
-              <button type="button" data-bs-dismiss="modal" className="btn btn-primary w-100 " onClick={MakeLogout}>Sair</button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <nav className="navbar navbar-expand-md navbar-dark bg-dark px-0 px-sm-5">
-        <div className="container-fluid">
-          <button
-            className="navbar-toggler"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#navbarTogglerDemo01"
-            aria-controls="navbarTogglerDemo01"
-            aria-expanded="false"
-            aria-label="Toggle navigation"
-          >
-            <span className="navbar-toggler-icon"></span>
-          </button>
-          <div className="d-block d-md-none ">
             {user == undefined ? <ActionLogin /> : <ActionProfile />}
           </div>
-          <div className="collapse navbar-collapse" id="navbarTogglerDemo01">
-            <a className="navbar-brand d-none d-md-block" href="#">
-              <svg
-                className="bi me-2 bi-wrench-adjustable-circle"
-                width="50"
-                height="40"
-                role="img"
-                aria-label="Bootstrap"
-                fill="currentColor"
-                viewBox="0 0 16 16"
-                onClick={(e) => {
-                  e.preventDefault();
-                }}
-              >
-                <path d="M12.496 8a4.491 4.491 0 0 1-1.703 3.526L9.497 8.5l2.959-1.11c.027.2.04.403.04.61Z" />
-                <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0Zm-1 0a7 7 0 1 0-13.202 3.249l1.988-1.657a4.5 4.5 0 0 1 7.537-4.623L7.497 6.5l1 2.5 1.333 3.11c-.56.251-1.18.39-1.833.39a4.49 4.49 0 0 1-1.592-.29L4.747 14.2A7 7 0 0 0 15 8Zm-8.295.139a.25.25 0 0 0-.288-.376l-1.5.5.159.474.808-.27-.595.894a.25.25 0 0 0 .287.376l.808-.27-.595.894a.25.25 0 0 0 .287.376l1.5-.5-.159-.474-.808.27.596-.894a.25.25 0 0 0-.288-.376l-.808.27.596-.894Z" />
-              </svg>
-            </a>
-            <ul className="navbar-nav me-auto mb-2 mb-md-0">
-              <li className="nav-item">
-                <a className="nav-link active" aria-current="page" href="/">
-                  Máquinas
-                </a>
-              </li>
-              <li className="nav-item">
-                <a className="nav-link" href="/me">
-                  Perfil
-                </a>
-              </li>
-            </ul>
-          </div>
         </div>
-        <div className="d-none d-md-block text-nowrap">
-          {user == undefined ? <ActionLogin /> : <ActionProfile />}
+        <div class="collapse" id="collapseExample">
+          <nav class="nav d-block px-5">
+            <ReturnLinks />
+          </nav>
         </div>
       </nav>
     </div>
