@@ -6,6 +6,11 @@ import { toast } from "react-hot-toast";
 import { useFirebaseAuth } from "../FirebaseProvider";
 import { Login, Logout } from "../../utils/LogUtils";
 
+import { CreateOrUpdateData, GetData, firestore } from  "./../../utils/FireConnection"
+import {doc} from "firebase/firestore/lite";
+
+import { v4 } from "uuid";
+
 function ActionLogin() {
   const MakeLogin = () => {
     Login();
@@ -33,7 +38,7 @@ function MakeLogout(e) {
   let logout = Logout();
   if (logout === undefined) {
     toast.success("Logout realizado com sucesso!", {
-      duration: 4000,
+      duration: 3000,
       style: {
         background: "#333",
         color: "#fff",
@@ -61,21 +66,22 @@ function ReturnLinks({ className }) {
   return (
     <div className={className}>
       {links.map((e) => {
-        console.log(e);
         if (location.pathname === e.to) {
           return (
             <Link
-              class="nav-link text-white active"
+              key={e.to}
+              className="nav-link text-white active"
               aria-current="page"
               to={e.to}
             >
               {e.name}
             </Link>
           );
-        }else{
+        } else {
           return (
             <Link
-              class="nav-link text-white-50"
+              key={e.to}
+              className="nav-link text-white-50"
               aria-current="page"
               to={e.to}
             >
@@ -92,10 +98,10 @@ function ActionProfile() {
   const user = useFirebaseAuth();
   return (
     <div>
-      <div class="dropdown text-end">
+      <div className="dropdown text-end">
         <a
           href="#"
-          class="d-block link-light text-decoration-none dropdown-toggle show"
+          className="d-block link-light text-decoration-none dropdown-toggle show"
           id="dropdownUser1"
           data-bs-toggle="dropdown"
           aria-expanded="true"
@@ -106,16 +112,28 @@ function ActionProfile() {
             width="40"
             referrerPolicy="no-referrer"
             height="40"
-            class="rounded-circle"
+            className="rounded-circle"
           />
         </a>
         <ul
-          class="dropdown-menu text-small"
+          className="dropdown-menu text-small"
           aria-labelledby="dropdownUser1"
           data-popper-placement="bottom-end"
         >
           <li>
-            <a class="dropdown-item" href="" onClick={MakeLogout}>
+            <a
+              className="dropdown-item"
+              data-bs-toggle="modal"
+              data-bs-target="#exampleModal"
+            >
+              Criar Nova Máquina
+            </a>
+          </li>
+          <li>
+            <hr className="dropdown-divider" />
+          </li>
+          <li>
+            <a className="dropdown-item" onClick={MakeLogout}>
               Sign out
             </a>
           </li>
@@ -125,18 +143,189 @@ function ActionProfile() {
   );
 }
 
-//lg
-export default function Navbar() {
-  const user = useFirebaseAuth();
-
+function ModalLoading(props) {
   return (
     <div>
-      <nav class="p-3 mb-3 bg-dark border-bottom">
-        <div class="container-fluid">
-          <div class="d-flex flex-wrap align-items-center justify-content-start">
+      <div className="modal-body">
+        <div className="progress">
+          <div
+            className="progress-bar progress-bar-striped progress-bar-animated"
+            role="progressbar"
+            aria-valuenow={props.percentage}
+            aria-valuemin="0"
+            aria-valuemax="100"
+            style={{ width: `${props.percentage}%` }}
+          >
+            {props.percentage}%
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function Navbar() {
+  const user = useFirebaseAuth();
+  const [isModalLoading, setModalLoading] = React.useState(false);
+  const [LoadingPercentage, setLoadingPercentage] = React.useState(0);
+
+  const CreateMachine = async (e = null) => {
+    if (e == null || e == undefined) return;
+    try{
+      setModalLoading(true)
+      const machineTitle = e.target[0].value
+      const newId = v4() + v4() + v4() + v4()
+      setLoadingPercentage(25)
+  
+      await CreateOrUpdateData(newId, {
+        id: newId,
+        ownerId: user.uid,
+        ownerEmail: user.email,
+        title: machineTitle
+      }, "machines")
+  
+      setLoadingPercentage(50) 
+      const UserData = await GetData(user.uid, "users")
+      setLoadingPercentage(75)
+  
+      await CreateOrUpdateData(user.uid, {
+        Machines: [...UserData.Machines, newId]
+      }, "users")
+      setLoadingPercentage(100)
+  
+      setModalLoading(false)
+      toast.success("Máquina criada com sucesso!", {
+        duration: 3000,
+        style: {
+          background: "#333",
+          color: "#fff",
+        },
+      });
+    }catch(e){
+      setLoadingPercentage(0)
+  
+      setModalLoading(false)
+      toast.error("Houve um erro ao criar a máquina!", {
+        duration: 3000,
+        style: {
+          background: "#333",
+          color: "#fff",
+        },
+      });
+    }
+    
+  };
+
+  return (
+    <div id="Container">
+      <div
+        className="modal fade"
+        data-bs-backdrop="static"
+        data-bs-keyboard="false"
+        id="exampleModal"
+        tabIndex="-1"
+        aria-labelledby="exampleModalLabel"
+        aria-hidden="true"
+      >
+        <div className="modal-dialog modal-fullscreen-md-down">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title" id="exampleModalLabel">
+                Criar uma Nova Máquina
+              </h5>
+              {isModalLoading ? (
+                <div />
+              ) : (
+                <button
+                  type="button"
+                  className="btn-close"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                ></button>
+              )}
+            </div>
+            {isModalLoading ? (
+              <ModalLoading percentage={LoadingPercentage} />
+            ) : (
+              <div>
+                <div className="modal-body">
+                  <form id="form" onSubmit={(e) => {
+                    e.preventDefault()
+                    CreateMachine(e)
+                  }}>
+                    <div className="mb-3">
+                      <label
+                        htmlFor="recipient-name"
+                        className="col-form-label"
+                      >
+                        Nome da máquina:
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        className="form-control"
+                        id="recipient-name"
+                        placeholder="..."
+                      />
+                    </div>
+                    <div className="">
+                      <div className="mb-3">
+                        <label
+                          htmlFor="message-text"
+                          className="col-form-label"
+                        >
+                          Imagens:
+                        </label>
+                        <input
+                          type="file"
+                          multiple
+                          accept="image/*"
+                          className="form-control"
+                          id="recipient-name"
+                          placeholder="..."
+                        />
+                      </div>
+                      <div className="mb-3">
+                        <label
+                          htmlFor="message-text"
+                          className="col-form-label"
+                        >
+                          Arquivos 3d:
+                        </label>
+                        <input
+                          type="file"
+                          accept=".glb"
+                          className="form-control"
+                          id="recipient-name"
+                          placeholder="..."
+                        />
+                      </div>
+                    </div>
+                  </form>
+                </div>
+                <div className="modal-footer">
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    data-bs-dismiss="modal"
+                  >
+                    Close
+                  </button>
+                  <button type="submit" form="form" className="btn btn-primary">
+                    Send message
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+      <nav className="p-3 mb-5 bg-dark border-bottom fixed-top user-select-none">
+        <div className="container-fluid">
+          <div className="d-flex flex-wrap align-items-center justify-content-start">
             <div className="nav col-auto me-auto mb-2 justify-content-center mb-md-0 px-3">
               <a
-                class="btn btn-outline-dark text-white-50 d-block d-sm-none"
+                className="btn btn-outline-dark text-white-50 d-block d-sm-none"
                 data-bs-toggle="collapse"
                 href="#collapseExample"
                 role="button"
@@ -152,7 +341,7 @@ export default function Navbar() {
                   stroke="currentColor"
                   strokeWidth="2"
                   strokeLinecap="round"
-                  class="feather feather-menu"
+                  className="feather feather-menu"
                 >
                   <line x1="3" y1="12" x2="21" y2="12"></line>
                   <line x1="3" y1="6" x2="21" y2="6"></line>
@@ -161,7 +350,7 @@ export default function Navbar() {
               </a>
               <div className="d-none d-sm-block">
                 <div className="d-flex flex-row">
-                  <a className="text-white ps-3" href="#">
+                  <a className="text-white ps-3">
                     <svg
                       className="bi me-2 bi-wrench-adjustable-circle"
                       width="50"
@@ -178,7 +367,7 @@ export default function Navbar() {
                       <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0Zm-1 0a7 7 0 1 0-13.202 3.249l1.988-1.657a4.5 4.5 0 0 1 7.537-4.623L7.497 6.5l1 2.5 1.333 3.11c-.56.251-1.18.39-1.833.39a4.49 4.49 0 0 1-1.592-.29L4.747 14.2A7 7 0 0 0 15 8Zm-8.295.139a.25.25 0 0 0-.288-.376l-1.5.5.159.474.808-.27-.595.894a.25.25 0 0 0 .287.376l.808-.27-.595.894a.25.25 0 0 0 .287.376l1.5-.5-.159-.474-.808.27.596-.894a.25.25 0 0 0-.288-.376l-.808.27.596-.894Z" />
                     </svg>
                   </a>
-                  <nav class="nav">
+                  <nav className="nav">
                     <ReturnLinks className="d-flex flex-row" />
                   </nav>
                 </div>
@@ -187,8 +376,8 @@ export default function Navbar() {
             {user == undefined ? <ActionLogin /> : <ActionProfile />}
           </div>
         </div>
-        <div class="collapse" id="collapseExample">
-          <nav class="nav d-block px-5">
+        <div className="collapse" id="collapseExample">
+          <nav className="nav d-block px-5">
             <ReturnLinks />
           </nav>
         </div>

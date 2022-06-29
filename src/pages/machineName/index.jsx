@@ -2,6 +2,7 @@ import * as React from "react";
 import { useParams } from "react-router-dom";
 import "./style.css";
 
+
 function Carroussel() {
   return (
     <div
@@ -125,21 +126,28 @@ function ModelViwer() {
 }
 
 export default function Machine() {
-  let {user, machineName} = useParams();
+  let { user, machineName } = useParams();
   const [is3d, set3d] = React.useState(false);
+  const [have3dImage, setHave3dImage] = React.useState(true);
 
   return (
     <div id="Container">
       <div id="Centered">
         <div className="m-auto">
-          <div className="py-1">
-          </div>
+          <div className="py-1"></div>
           <div id="model" className="mb-4 mt-2">
             <h1>Fresadora universal Kfu 2</h1>
             <h4 className="text-muted">Plano de lubrificação</h4>
-            <p className="opacity-25"><em>Criado por: {user}.</em></p>
+            <p className="opacity-25">
+              <em>Criado por: {user}.</em>
+            </p>
           </div>
           <div id="table">{!is3d ? <Carroussel /> : <ModelViwer />}</div>
+          <div> {
+            have3dImage? <div className="form-check form-switch mb-5 mt-2 d-flex justify-content-end">
+            <input className="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault" onChange={(e) => {set3d(e.target.checked)}} />
+          </div>: <div />
+          }</div>
           {
             // [ ]: tranform this table in components
           }
@@ -214,7 +222,7 @@ export default function Machine() {
               <select
                 className="form-select form-select-sm mb-2"
                 aria-label=".form-select-sm example"
-              > 
+              >
                 <option value="1">Proxima manutenção</option>
                 <option value="2">Segunda próxima manutenção</option>
                 <option value="3">Terceita próxima manutenção</option>
@@ -277,7 +285,10 @@ export default function Machine() {
           </div>
           <div id="info" className="d-flex flex-column flex-lg-row">
             <div className="m-auto">
-              <button type="button" className="btn btn-outline-info w-full mt-2 mb-0 mb-lg-5">
+              <button
+                type="button"
+                className="btn btn-outline-info w-full mt-2 mb-0 mb-lg-5"
+              >
                 Ver historico de manutenções
               </button>
             </div>
@@ -290,7 +301,66 @@ export default function Machine() {
               </button>
             </div>
           </div>
-          <div className="mb-5">
+          <div className="m-lg-auto mx-2 mb-5">
+            <div className="mb-5">
+              <h1 className="display-5 mb-3">Quais óleos ultilizar</h1>
+            </div>
+            <table className="table table-striped-columns w-full">
+              <thead>
+                <tr>
+                  <th scope="col">#</th>
+                  <th scope="col">First</th>
+                  <th scope="col">Last</th>
+                  <th scope="col">Handle</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">1</th>
+                  <td>Mark</td>
+                  <td>Otto</td>
+                  <td>@mdo</td>
+                </tr>
+                <tr>
+                  <th scope="row">1</th>
+                  <td>Mark</td>
+                  <td>Otto</td>
+                  <td>@mdo</td>
+                </tr>
+                <tr>
+                  <th scope="row">1</th>
+                  <td>Mark</td>
+                  <td>Otto</td>
+                  <td>@mdo</td>
+                </tr>
+                <tr>
+                  <th scope="row">1</th>
+                  <td>Mark</td>
+                  <td>Otto</td>
+                  <td>@mdo</td>
+                </tr>
+                <tr>
+                  <th scope="row">1</th>
+                  <td>Mark</td>
+                  <td>Otto</td>
+                  <td>@mdo</td>
+                </tr>
+                <tr>
+                  <th scope="row">1</th>
+                  <td>Mark</td>
+                  <td>Otto</td>
+                  <td>@mdo</td>
+                </tr>
+                <tr>
+                  <th scope="row">2</th>
+                  <td>Jacob</td>
+                  <td>Thornton</td>
+                  <td>@fat</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div className="mb-5 mt-5">
             <h1 className="display-5 mb-3">Informações Importantes</h1>
             <div className="accordion" id="accordionExample">
               <div className="accordion-item">

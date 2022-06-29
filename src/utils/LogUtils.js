@@ -1,15 +1,31 @@
 import { GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 import { auth } from './FireConnection';
 
+import {CreateOrUpdateData } from "./FireConnection"
+
+
 function Login() {
   let provider = new GoogleAuthProvider();
   signInWithPopup(auth, provider)
-    .then((result) => {
+    .then( async (result) => {
       // This gives you a Google Access Token. You can use it to access the Google API.
       const credential = GoogleAuthProvider.credentialFromResult(result);
       const token = credential.accessToken;
       // The signed-in user info.
       const user = result.user;
+
+      CreateOrUpdateData(user.uid, {
+        uid: user.uid,
+        username: user.displayName,
+        email: user.email,
+        picture: user.photoURL,
+        HavePermissions: [],
+        Machines: [],
+        stars: [],
+        starred: [],
+        followers: []
+      }, "users")
+
       return { user, token, credential };
       // ...
     })
