@@ -82,7 +82,7 @@ export default function CaRdView() {
           <div>
             <div className="">
               {/* Solicitação de serviço */}
-              {data && (
+              {data.ss && (
                 <div ref={componentRef}>
                   <div className="border mt-2 rounded-2 mx-2 text-center">
                     <h1 className="text-black m-2">Solicitação de Serviço</h1>

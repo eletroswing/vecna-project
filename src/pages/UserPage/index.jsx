@@ -205,7 +205,7 @@ export default function User() {
       } else {
         setPageState("error");
       }
-    } catch (e) {console.log(e)}
+    } catch (e) {}
   };
 
   React.useEffect(() => {

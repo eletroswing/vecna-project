@@ -134,7 +134,6 @@ export default function Card(props) {
                           const docs = await getDocs(docSnap);
                           docs.forEach(async (e) => {
                             let dt = e.data();
-                            console.log(dt)
                             await Delete("registers", dt.id)
                           });
 
