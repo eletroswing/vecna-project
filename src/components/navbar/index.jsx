@@ -6,8 +6,7 @@ import { toast } from "react-hot-toast";
 import { useFirebaseAuth } from "../FirebaseProvider";
 import { Login, Logout } from "../../utils/LogUtils";
 
-import { CreateOrUpdateData, GetData, firestore } from  "./../../utils/FireConnection"
-import {doc} from "firebase/firestore/lite";
+import { CreateOrUpdateData, UploadFile } from "../../utils/FireConnection";
 
 import { v4 } from "uuid";
 
@@ -25,7 +24,7 @@ function ActionLogin() {
         <img
           width="20px"
           className="me-2"
-          src="https://imagensemoldes.com.br/wp-content/uploads/2020/04/imagem-google-logo-com-fundo-transparente-1.png"
+          src="/google.svg"
         />
         Entrar com Google
       </button>
@@ -156,10 +155,73 @@ function ModalLoading(props) {
             aria-valuemax="100"
             style={{ width: `${props.percentage}%` }}
           >
-            {props.percentage}%
+            {props.text}
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function EditableCollumn(props) {
+  const [oilChild, setOilChild] = React.useState([]);
+  let id = props.id;
+
+  return (
+    <div className="form-control border-0">
+      <input
+        type="input"
+        className="form-control mb-2"
+        placeholder="Titulo da coluna"
+        id={`table title ${id}`}
+        required
+      />
+
+      <div>
+        {oilChild.map((item, index) => {
+          return (
+            <div key={index} className="mt-2 d-flex">
+              {item.component}
+              <div className="align-self-center">
+                <button
+                  type="button"
+                  className="btn-close"
+                  id={`info close ${item.id}`}
+                  aria-label="Close"
+                  onClick={(e) => {
+                    let list = [...oilChild];
+                    list.splice(index, 1);
+                    setOilChild(list);
+                  }}
+                ></button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <button
+        type="button"
+        className="btn btn-outline-primary"
+        onClick={(e) => {
+          setOilChild([
+            ...oilChild,
+            {
+              id: `table info ${id} ${oilChild.length}`,
+              component: (
+                <input
+                  type="input"
+                  className="form-control mb-2"
+                  placeholder="Adicionar informação"
+                  id={`table info ${id} ${oilChild.length}`}
+                  required
+                />
+              ),
+            },
+          ]);
+        }}
+      >
+        Adicionar linha
+      </button>
     </div>
   );
 }
@@ -168,32 +230,179 @@ export default function Navbar() {
   const user = useFirebaseAuth();
   const [isModalLoading, setModalLoading] = React.useState(false);
   const [LoadingPercentage, setLoadingPercentage] = React.useState(0);
+  const [LoadingText, setLoadingText] = React.useState("carregando...");
+
+  const [emailInput, setEmailInput] = React.useState([]);
+  const [accordInput, setAccordInput] = React.useState([]);
+  const [oilInformation, setOilInformation] = React.useState([]);
+
+  const FilesRef = React.createRef();
+  const ModelRef = React.createRef();
+
+  const HandleFileChange = (e) => {
+    let target = e.target.id;
+    if (target == "model") {
+      FilesRef.current.required = false;
+    } else ModelRef.current.required = false;
+  };
 
   const CreateMachine = async (e = null) => {
     if (e == null || e == undefined) return;
-    try{
-      setModalLoading(true)
-      const machineTitle = e.target[0].value
-      const newId = v4() + v4() + v4() + v4()
-      setLoadingPercentage(25)
+
+    //FIXME: Bug - quando é enviado somente imagens do carrossel, as imagens nao são mostradas - bug await 
+    //FIXME: Bug - O icone de perfil demora muito pra carregar, botar um loading enqunato é carregado
+
+    var PermEmails = [];
+    var TableData = {};
+    var Images = [];
+    var glb = "";
+    var Thumb = "";
+    var MTitle = "";
+    var AccorditionTitle = "";
+    var AccorditionData = "";
+    var Accorditions = [];
+    var Notification = {};
+
+    var DataToCreate = {};
+
+    try {
+      setModalLoading(true);
+
+      setLoadingPercentage(5);
+      setLoadingText("Começando o envio...");
+
+      let data = [...e.target];
+      data.forEach(async (element) => {
+        if (
+          element.nodeName == "INPUT" ||
+          element.nodeName == "TEXTAREA" ||
+          element.nodeName == "SELECT"
+        ) {
+          if (element.id == "title") {
+            MTitle = element.value;
+            setLoadingPercentage(10);
+            setLoadingText("Titulo...");
+          }
+          if (
+            element.id.split(" ")[0] == "notification" &&
+            element.id.split(" ")[1] == "number"
+          ) {
+            Notification.number = element.value;
+            setLoadingPercentage(15);
+            setLoadingText("Notificações...");
+          }
+          if (
+            element.id.split(" ")[0] == "notification" &&
+            element.id.split(" ")[1] == "timespace"
+          ) {
+            Notification.timespace = element.value;
+            setLoadingPercentage(15);
+            setLoadingText("Notificações...");
+          }
+          if (element.id.split(" ")[0] == "email") {
+            PermEmails.push(element.value);
+            setLoadingPercentage(20);
+            setLoadingText("Permissões...");
+          }
+          if (
+            element.id.split(" ")[0] == "data" &&
+            element.id.split(" ")[1] == "title"
+          ) {
+            AccorditionTitle = element.value;
+            setLoadingPercentage(25);
+            setLoadingText("Titulo das instruções...");
+          }
+          if (
+            element.id.split(" ")[0] == "data" &&
+            element.id.split(" ")[1] == "obs"
+          ) {
+            AccorditionData = element.value;
+            setLoadingPercentage(25);
+            setLoadingText("Explicação das instruções...");
+          }
+          if (AccorditionData !== "" && AccorditionTitle !== "") {
+            setLoadingPercentage(30);
+            setLoadingText("Adicionando a lista...");
+            Accorditions.push({
+              title: AccorditionTitle,
+              data: AccorditionData,
+            });
+            AccorditionTitle = "";
+            AccorditionData = "";
+          }
+          if (element.id == "files") {
+            setLoadingPercentage(35);
+            setLoadingText("Enviando as fotos...");
+            if (element.files) {
+              let files = [...element.files];
+              files.forEach(async (file, index) => {
+                setLoadingText(`Enviando as fotos ${index}...`);
+                let reference = `${user.uid}/${v4() + v4()}`;
+                Images.push(reference);
+                await UploadFile(reference, file);
+              });
+            }
+          }
+          if (
+            element.id.split(" ")[0] == "table" &&
+            element.id.split(" ")[1] == "title"
+          ) {
+            TableData[element.id.split(" ")[2]] = {title: element.value, child: []};
+          }
   
-      await CreateOrUpdateData(newId, {
+          if (
+            element.id.split(" ")[0] == "table" &&
+            element.id.split(" ")[1] == "info"
+          ) {
+            TableData[element.id.split(" ")[2]].child.push(element.value)
+          }
+          if (element.id == "thumbnail") {
+            setLoadingPercentage(70);
+            setLoadingText("Enviando a thumbnail...");
+            if (element.files[0]) {
+              let file = element.files[0];
+              let reference = `${user.uid}/${v4() + v4()}`;
+              Thumb = reference;
+              await UploadFile(reference, file);
+            }
+          }
+          if (element.id == "model") {
+            if (element.files[0]) {
+              setLoadingPercentage(80);
+              setLoadingText("Enviando o arquivo 3d...");
+              let file = element.files[0];
+              let reference = `${user.uid}/${v4() + v4()}`;
+              glb = reference;
+              await UploadFile(reference, file);
+            }
+          }
+        }
+      });
+      let newId = v4() + v4() + v4() + v4();
+      setLoadingPercentage(90);
+      setLoadingText("Gerando os dados...");
+      DataToCreate = {
+        permissions: PermEmails,
+        tableInformation: TableData,
+        images: [...Images],
+        glb: glb,
+        thumbnail: Thumb,
+        title: MTitle,
+        accorditions: Accorditions,
+        notification: Notification,
         id: newId,
         ownerId: user.uid,
         ownerEmail: user.email,
-        title: machineTitle
-      }, "machines")
-  
-      setLoadingPercentage(50) 
-      const UserData = await GetData(user.uid, "users")
-      setLoadingPercentage(75)
-  
-      await CreateOrUpdateData(user.uid, {
-        Machines: [...UserData.Machines, newId]
-      }, "users")
-      setLoadingPercentage(100)
-  
-      setModalLoading(false)
+      };
+
+      setLoadingPercentage(99);
+      setLoadingText("Criando no servidor...");
+      await CreateOrUpdateData(newId, DataToCreate, "machines");
+
+      setLoadingPercentage(100);
+      setLoadingText("Enviado!");
+
+      setModalLoading(false);
       toast.success("Máquina criada com sucesso!", {
         duration: 3000,
         style: {
@@ -201,10 +410,9 @@ export default function Navbar() {
           color: "#fff",
         },
       });
-    }catch(e){
-      setLoadingPercentage(0)
-  
-      setModalLoading(false)
+    } catch (e) {
+      setLoadingPercentage(0);
+      setModalLoading(false);
       toast.error("Houve um erro ao criar a máquina!", {
         duration: 3000,
         style: {
@@ -213,7 +421,6 @@ export default function Navbar() {
         },
       });
     }
-    
   };
 
   return (
@@ -227,7 +434,7 @@ export default function Navbar() {
         aria-labelledby="exampleModalLabel"
         aria-hidden="true"
       >
-        <div className="modal-dialog modal-fullscreen-md-down">
+        <div className="modal-dialog">
           <div className="modal-content">
             <div className="modal-header">
               <h5 className="modal-title" id="exampleModalLabel">
@@ -245,14 +452,17 @@ export default function Navbar() {
               )}
             </div>
             {isModalLoading ? (
-              <ModalLoading percentage={LoadingPercentage} />
+              <ModalLoading percentage={LoadingPercentage} text={LoadingText} />
             ) : (
               <div>
                 <div className="modal-body">
-                  <form id="form" onSubmit={(e) => {
-                    e.preventDefault()
-                    CreateMachine(e)
-                  }}>
+                  <form
+                    id="form"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      CreateMachine(e);
+                    }}
+                  >
                     <div className="mb-3">
                       <label
                         htmlFor="recipient-name"
@@ -264,16 +474,25 @@ export default function Navbar() {
                         type="text"
                         required
                         className="form-control"
-                        id="recipient-name"
+                        id="title"
                         placeholder="..."
                       />
                     </div>
                     <div className="">
                       <div className="mb-3">
-                        <label
-                          htmlFor="message-text"
-                          className="col-form-label"
-                        >
+                        <label htmlFor="thumbnail" className="col-form-label">
+                          Thumbnail:
+                        </label>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="form-control"
+                          id="thumbnail"
+                          required
+                        />
+                      </div>
+                      <div className="mb-3">
+                        <label htmlFor="files" className="col-form-label">
                           Imagens:
                         </label>
                         <input
@@ -281,8 +500,11 @@ export default function Navbar() {
                           multiple
                           accept="image/*"
                           className="form-control"
-                          id="recipient-name"
+                          id="files"
                           placeholder="..."
+                          ref={FilesRef}
+                          onChange={HandleFileChange}
+                          required={true}
                         />
                       </div>
                       <div className="mb-3">
@@ -295,10 +517,233 @@ export default function Navbar() {
                         <input
                           type="file"
                           accept=".glb"
+                          onChange={HandleFileChange}
                           className="form-control"
-                          id="recipient-name"
+                          id="model"
                           placeholder="..."
+                          ref={ModelRef}
+                          required={true}
                         />
+                      </div>
+                      <div className="mb-3">
+                        <label className="col-form-label">
+                          Notificar a cada:
+                        </label>
+                        <div className="d-flex">
+                          <select
+                            className="form-select me-2"
+                            aria-label="Default select example"
+                            id="notification number"
+                          >
+                            <option defaultValue value="1">
+                              1
+                            </option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                            <option value="11">11</option>
+                            <option value="12">12</option>
+                            <option value="13">13</option>
+                            <option value="14">14</option>
+                            <option value="15">15</option>
+                          </select>
+                          <select
+                            className="form-select"
+                            aria-label="Default select example"
+                            id="notification timespace"
+                          >
+                            <option value="1">dia(s)</option>
+                            <option defaultValue value="2">
+                              semana(as)
+                            </option>
+                            <option value="3">mês(es)</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div className="mb-3">
+                        <label
+                          htmlFor="recipient-name"
+                          className="col-form-label"
+                        >
+                          Emails Permitidos:
+                        </label>
+                        {emailInput.map((component, index) => {
+                          return (
+                            <div key={component.id} className="d-flex">
+                              {component.component}
+                              <div className="align-self-center">
+                                <button
+                                  type="button"
+                                  className="btn-close"
+                                  id={`EmailClose${component.id}`}
+                                  aria-label="Close"
+                                  onClick={(e) => {
+                                    let list = [...emailInput];
+                                    list.splice(index, 1);
+                                    setEmailInput(list);
+                                  }}
+                                ></button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                        <div className="form-control border-0">
+                          <button
+                            type="button"
+                            className="btn btn-primary btn-sm mt-2"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              let id_for_input = v4();
+                              setEmailInput([
+                                ...emailInput,
+                                {
+                                  id: id_for_input,
+                                  component: (
+                                    <input
+                                      type="email"
+                                      className="form-control mt-2 mb-2"
+                                      id={`email ${id_for_input}`}
+                                      required
+                                      placeholder="email@email.com  "
+                                    />
+                                  ),
+                                },
+                              ]);
+                            }}
+                          >
+                            Adicionar Email
+                          </button>
+                        </div>
+                      </div>
+                      <div className="mb-3">
+                        <label
+                          htmlFor="recipient-name"
+                          className="col-form-label"
+                        >
+                          Instruções:
+                        </label>
+                        {accordInput.map((component, index) => {
+                          return (
+                            <div key={component.id} className="d-flex">
+                              <div className="form-control mt-2">
+                                {component.componentTitle}
+                                {component.componentData}
+                              </div>
+                              <div className="align-self-center">
+                                <button
+                                  type="button"
+                                  className="btn-close"
+                                  id={`EmailClose${component.id}`}
+                                  aria-label="Close"
+                                  onClick={(e) => {
+                                    let list = [...accordInput];
+                                    list.splice(index, 1);
+                                    setAccordInput(list);
+                                  }}
+                                ></button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                        <div className="form-control border-0">
+                          <button
+                            type="button"
+                            className="btn btn-primary btn-sm mt-2"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              let id_for_input = v4();
+                              setAccordInput([
+                                ...accordInput,
+                                {
+                                  id: id_for_input,
+                                  componentTitle: (
+                                    <div className="form-control border-0">
+                                      <input
+                                        type="input"
+                                        className="form-control mb-2"
+                                        id={`data title ${id_for_input}`}
+                                        placeholder="Titulo da instrução"
+                                        required
+                                      />
+                                    </div>
+                                  ),
+                                  componentData: (
+                                    <div className="form-control border-0">
+                                      <textarea
+                                        type="input"
+                                        className="form-control mb-2"
+                                        id={`data obs ${id_for_input}`}
+                                        placeholder="Dados da instrução"
+                                        required
+                                      />
+                                    </div>
+                                  ),
+                                },
+                              ]);
+                            }}
+                          >
+                            Adicionar Instrução
+                          </button>
+                        </div>
+                      </div>
+                      <div className="mb-3">
+                        <label
+                          htmlFor="recipient-name"
+                          className="col-form-label"
+                        >
+                          Informação de lubrificação:
+                        </label>
+                        {oilInformation.map((component, index) => {
+                          return (
+                            <div key={component.id} className="d-flex">
+                              <div className="form-control mt-2">
+                                {component.component}
+                              </div>
+                              <div className="align-self-center">
+                                <button
+                                  type="button"
+                                  className="btn-close"
+                                  id={`table component ${component.id}`}
+                                  aria-label="Close"
+                                  onClick={(e) => {
+                                    let list = [...oilInformation];
+                                    list.splice(index, 1);
+                                    setOilInformation(list);
+                                  }}
+                                ></button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                        <div className="form-control border-0">
+                          <button
+                            type="button"
+                            className="btn btn-primary btn-sm mt-2"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              let id_for_input = v4();
+                              setOilInformation([
+                                ...oilInformation,
+                                {
+                                  id: id_for_input,
+                                  component: (
+                                    <div className="form-control border-0">
+                                      <EditableCollumn id={`${id_for_input}`} />
+                                    </div>
+                                  ),
+                                },
+                              ]);
+                            }}
+                          >
+                            Adicionar Campo de tabela
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </form>
@@ -309,10 +754,10 @@ export default function Navbar() {
                     className="btn btn-secondary"
                     data-bs-dismiss="modal"
                   >
-                    Close
+                    Fechar
                   </button>
                   <button type="submit" form="form" className="btn btn-primary">
-                    Send message
+                    Criar máquina
                   </button>
                 </div>
               </div>

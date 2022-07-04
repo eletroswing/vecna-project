@@ -19,11 +19,6 @@ function Login() {
         username: user.displayName,
         email: user.email,
         picture: user.photoURL,
-        HavePermissions: [],
-        Machines: [],
-        stars: [],
-        starred: [],
-        followers: []
       }, "users")
 
       return { user, token, credential };

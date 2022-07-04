@@ -5,10 +5,18 @@ import "./style.css";
 
 import { useFirebaseAuth } from "../../components/FirebaseProvider";
 import { GetData, firestore } from "../../utils/FireConnection";
-import { collection, query, getDocs, where } from "firebase/firestore/lite";
+import {
+  collection,
+  query,
+  getDocs,
+  where,
+  orderBy,
+} from "firebase/firestore/lite";
 
 import CardList from "../../components/CardList";
 import ErrorPage from "../../components/404";
+import LoadingPage from "../../components/Loading";
+import RegisterComponent from "../../components/Register";
 
 function ProfileCard(props) {
   return (
@@ -38,7 +46,9 @@ function ProfileCard(props) {
                   </div>
                   <div className="">
                     <h6>
-                      {(props.data && props.data.followers) ? props.data.followers.length : "0"}
+                      {props.data && props.data.followers
+                        ? props.data.followers.length
+                        : "0"}
                     </h6>
                   </div>
                 </div>
@@ -47,7 +57,11 @@ function ProfileCard(props) {
                     <small className="text-muted">Estrelas</small>
                   </div>
                   <div className="">
-                    <h6>{(props.data && props.data.stars) ? props.data.stars.length : "0"}</h6>
+                    <h6>
+                      {props.data && props.data.stars
+                        ? props.data.stars.length
+                        : "0"}
+                    </h6>
                   </div>
                 </div>
                 <div className="m-auto  me-2">
@@ -55,9 +69,7 @@ function ProfileCard(props) {
                     <small className="text-muted">Projetos</small>
                   </div>
                   <div className="">
-                    <h6>
-                      {(props.data && props.data.Machines) ? props.data.Machines.length : "0"}
-                    </h6>
+                    <h6>{props.cards ? props.cards.length : "0"}</h6>
                   </div>
                 </div>
               </div>
@@ -71,6 +83,25 @@ function ProfileCard(props) {
 function Dashboard(props) {
   const [cards, setCards] = React.useState([]);
   const [permissionCards, setPermissionCards] = React.useState([]);
+  const [register, setRegister] = React.useState([]);
+
+  const GetRegister = async () => {
+    try {
+      let data = [];
+      const docRef = collection(firestore, "registers");
+      const docSnap = query(
+        docRef,
+        where("ownerId", "==", `${props.data.uid}`)
+      );
+      const docs = await getDocs(docSnap);
+      docs.forEach((e) => {
+        let dt = e.data();
+        data.push(dt);
+      });
+
+      setRegister(data);
+    } catch (e) {}
+  };
 
   const GetMachines = async () => {
     try {
@@ -95,7 +126,7 @@ function Dashboard(props) {
       const docRef = collection(firestore, "machines");
       const docSnap = query(
         docRef,
-        where("permissions", "array-contains", `${props.data.uid}`)
+        where("permissions", "array-contains", `${props.data.email}`)
       );
       const docs = await getDocs(docSnap);
       docs.forEach((e) => {
@@ -109,11 +140,12 @@ function Dashboard(props) {
   React.useEffect(() => {
     GetMachines();
     GetPermMachines();
+    GetRegister();
   }, [props]);
 
   return (
     <div>
-      <ProfileCard data={props.data} />
+      <ProfileCard data={props.data} cards={cards} />
       {/*<CardList authorData={props.data} card={cards} />*/}
       <div className="m-4">
         <ul className="nav nav-tabs nav-fill" id="myTab">
@@ -141,7 +173,12 @@ function Dashboard(props) {
             <CardList card={permissionCards} />
           </div>
           <div className="tab-pane fade" id="messages">
-            <h4 className="mt-2">Em Desenvolvimento</h4>
+            {register &&
+              register.map((data, index) => {
+                return (
+                  <RegisterComponent key={`register ${data.id}`} data={data} />
+                );
+              })}
           </div>
         </div>
       </div>
@@ -151,16 +188,24 @@ function Dashboard(props) {
 
 export default function User() {
   const [ownerData, setOwnerData] = React.useState({});
+  const [pageState, setPageState] = React.useState("loading");
+
   let params = useParams();
   const user = useFirebaseAuth();
 
   const ProcessProfile = async () => {
     try {
-      if (params.user == "me") params.user = user.uid;
+      if (user && user.uid == params.user) window.location = "/me";
+      if (user && params.user == "me") params.user = user.uid;
 
       let data = await GetData(params.user, "users");
       setOwnerData(data);
-    } catch (e) {}
+      if (data) {
+        setPageState("loaded");
+      } else {
+        setPageState("error");
+      }
+    } catch (e) {console.log(e)}
   };
 
   React.useEffect(() => {
@@ -169,7 +214,11 @@ export default function User() {
 
   return (
     <div className="pt-4">
-      {params.user == "me" ? (
+      {pageState == "loading" ? (
+        <LoadingPage />
+      ) : pageState == "error" ? (
+        <ErrorPage />
+      ) : params.user == "me" ? (
         user ? (
           <Dashboard data={ownerData} params={params} />
         ) : (

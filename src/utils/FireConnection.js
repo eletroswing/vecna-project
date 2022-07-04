@@ -9,11 +9,11 @@ import {
   updateDoc,
   getDoc,
   query,
-  orderBy,
-  startAfter,
-  limit,
   getDocs,
+  deleteDoc
 } from "firebase/firestore/lite";
+
+import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject  } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBYt1PEtXUBHzTlqEEv47e9iSzaEBSLiro",
@@ -25,21 +25,26 @@ const firebaseConfig = {
   measurementId: "G-ECE613MR24",
 };
 
-async function GetAllMachines(
-  database = "machines"
-) {
-  var data = []
+async function GetAllMachines(database = "machines") {
+  var data = [];
   const db = getFirestore(app);
   const q = query(collection(db, database));
 
   const querySnapshot = await getDocs(q);
   querySnapshot.forEach(async (doc) => {
-    let CardData = doc.data()
-    let user = await GetData(CardData.ownerId.id, "users")
-    let dt = { "id": CardData.id, "link": `/${CardData.ownerId.id}`, cardLink: `/${CardData.ownerId.id}/${CardData.id}`, "author": user.username, "title": CardData.title, "authorImage": user.picture }
-    data.push(dt)
+    let CardData = doc.data();
+    let user = await GetData(CardData.ownerId.id, "users");
+    let dt = {
+      id: CardData.id,
+      link: `/${CardData.ownerId.id}`,
+      cardLink: `/${CardData.ownerId.id}/${CardData.id}`,
+      author: user.username,
+      title: CardData.title,
+      authorImage: user.picture,
+    };
+    data.push(dt);
   });
-  return data
+  return data;
 }
 
 async function GetData(id = null, databaseName = null) {
@@ -106,9 +111,40 @@ async function CreateOrUpdateData(id = null, data, databaseName = null) {
   };
 }
 
+async function UploadFile(reference, file) {
+  if (reference == undefined || reference == null || file == undefined || file == null) {
+    throw new Error("missing info");
+  }
+  let storageRef = ref(storage, reference);
+
+  // 'file' comes from the Blob or File API
+  let data = await uploadBytes(storageRef, file)
+  return {data, storageRef}
+}
+
+async function Delete(table, id){
+  if(!table || !id) throw new Error("missing info")
+  await deleteDoc(doc(firestore, table, id))
+  return
+}
+
+async function DeleteMedia(storage, reference){
+  if(!reference || !storage) throw new Error("missin info")
+  var MediaRef = ref(storage, reference);
+
+  // Delete the file
+  try{
+    await deleteObject(MediaRef)
+    return
+  }catch(e){
+    return e
+  }
+}
+
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const firestore = getFirestore(app);
+const storage = getStorage(app);
 
-export { auth, firestore, CreateOrUpdateData, GetData };
+export { auth, firestore, storage, CreateOrUpdateData, GetData,UploadFile, Delete, DeleteMedia };

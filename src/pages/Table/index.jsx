@@ -1,102 +1,42 @@
 import * as React from "react";
-import "./style.css"
+import { useParams } from "react-router-dom";
+import "./style.css";
 
-export default function Tabe() {
+import { collection, query, getDocs, where } from "firebase/firestore/lite";
+
+import { firestore } from "./../../utils/FireConnection";
+import RegisterComponent from "../../components/Register";
+
+export default function Table() {
+  const [registers, setRegisters] = React.useState([]);
+  const params = useParams();
+
+  const GetRegisters = async () => {
+    let data = [];
+    const docRef = collection(firestore, "registers");
+    const docSnap = query(
+      docRef,
+      where("machineId", "==", `${params.machineName}`)
+    );
+    const docs = await getDocs(docSnap);
+    docs.forEach((e) => {
+      let dt = e.data();
+      data.push(dt);
+    });
+    setRegisters(data);
+  };
+
+  React.useEffect(() => {
+    GetRegisters();
+  }, []);
   return (
     <div className="table-responsive">
-      <table className="table table-striped table-hover">
-        <thead>
-          <tr>
-            <th scope="col">#</th>
-            <th scope="col">First</th>
-            <th scope="col">Last</th>
-            <th scope="col">Handle</th>
-            <th scope="col">Handle</th>
-            <th scope="col">Handle</th>
-            <th scope="col">Handle</th>
-            <th scope="col">Handle</th>
-
-            <th scope="col">Handle</th>
-
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <th scope="row">1</th>
-            <td>Mark</td>
-            <td>Mark</td>
-            <td>Mark</td>
-            <td>Mark</td>
-            <td>Mark</td>
-            <td>Mark</td>
-            <td>Otto</td>
-            <td>@mdo</td>
-          </tr>
-          <tr>
-            <th scope="row">1</th>
-            <td>Mark</td>
-            <td>Otto</td>
-            <td>@mdo</td>
-          </tr><tr>
-            <th scope="row">1</th>
-            <td>Mark</td>
-            <td>Otto</td>
-            <td>@mdo</td>
-          </tr><tr>
-            <th scope="row">1</th>
-            <td>Mark</td>
-            <td>Otto</td>
-            <td>@mdo</td>
-          </tr><tr>
-            <th scope="row">1</th>
-            <td>Mark</td>
-            <td>Otto</td>
-            <td>@mdo</td>
-          </tr><tr>
-            <th scope="row">1</th>
-            <td>Mark</td>
-            <td>Otto</td>
-            <td>@mdo</td>
-          </tr><tr>
-            <th scope="row">1</th>
-            <td>Mark</td>
-            <td>Otto</td>
-            <td>@mdo</td>
-          </tr><tr>
-            <th scope="row">1</th>
-            <td>Mark</td>
-            <td>Otto</td>
-            <td>@mdo</td>
-          </tr><tr>
-            <th scope="row">1</th>
-            <td>Mark</td>
-            <td>Otto</td>
-            <td>@mdo</td>
-          </tr><tr>
-            <th scope="row">1</th>
-            <td>Mark</td>
-            <td>Otto</td>
-            <td>@mdo</td>
-          </tr><tr>
-            <th scope="row">1</th>
-            <td>Mark</td>
-            <td>Otto</td>
-            <td>@mdo</td>
-          </tr>
-          <tr>
-            <th scope="row">2</th>
-            <td>Jacob</td>
-            <td>Thornton</td>
-            <td>@fat</td>
-          </tr>
-          <tr>
-            <th scope="row">3</th>
-            <td>Larry</td>
-            <td>the Bird</td>
-            <td>@twitter</td>
-          </tr>
-        </tbody>
-      </table>
+      <div className="mx-2">
+      {registers &&
+        registers.map((data, index) => {
+          return <RegisterComponent key={`register ${data.id}`} data={data} />;
+        })}
+      </div>
     </div>
   );
 }

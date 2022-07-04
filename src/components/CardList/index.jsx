@@ -16,6 +16,7 @@ export default function CardList(props) {
                   cardLink={`/${cardData.ownerId}/${cardData.id}`}
                   cardTitle={cardData.title}
                   authorId={cardData.ownerId}
+                  data={cardData}
                 />
               );
             }else{
@@ -26,7 +27,7 @@ export default function CardList(props) {
                 cardLink={`/${cardData.ownerId}/${cardData.id}`}
                 cardTitle={cardData.title}
                 authorId={cardData.ownerId}
-                
+                data={cardData}
                 />
                 );
               }
