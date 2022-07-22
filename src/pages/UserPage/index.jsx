@@ -98,7 +98,8 @@ function Dashboard(props) {
         let dt = e.data();
         data.push(dt);
       });
-
+      data.sort((a, b) => a.createdTimestamp.toDate() - b.createdTimestamp.toDate());
+        data.reverse()
       setRegister(data);
     } catch (e) {}
   };
@@ -116,6 +117,8 @@ function Dashboard(props) {
         let dt = e.data();
         data.push(dt);
       });
+      data.sort((a, b) => a.createdTimestamp.toDate() - b.createdTimestamp.toDate());
+        data.reverse()
       setCards(data);
     } catch (e) {}
   };
@@ -133,6 +136,8 @@ function Dashboard(props) {
         let dt = e.data();
         data.push(dt);
       });
+      data.sort((a, b) => a.createdTimestamp.toDate() - b.createdTimestamp.toDate());
+        data.reverse()
       setPermissionCards(data);
     } catch (e) {}
   };

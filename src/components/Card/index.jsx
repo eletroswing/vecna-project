@@ -17,8 +17,9 @@ import {
   query,
   getDocs,
   where,
-  orderBy,
 } from "firebase/firestore/lite";
+
+import LoadingPage from "../Loading";
 
 export default function Card(props) {
   let user = useFirebaseAuth();
@@ -177,17 +178,25 @@ export default function Card(props) {
       </div>
       <div id="Card">
         {/* This is for general click in card */}
-        <div>
+        <div
+          loading="lazy"
+        >
           <Link
             className="text-black text-decoration-none"
             to={props.cardLink ? props.cardLink : "#"}
           >
-            <img
+            {Object.keys(useImage).length == 0? <LoadingPage />: <img
               src={useImage ? useImage : "https://via.placeholder.com/150"}
               id="CardImage"
               referrerPolicy="no-referrer"
+              loading="lazy"
               alt="..."
-            />
+              style={{
+                height: "55vh",
+                objectFit: "cover"
+              }}
+            />}
+            
             <div className="card-body user-select-none" id="CardContent">
               <h5 className="card-title" id="CardTitle">
                 <strong>
@@ -215,6 +224,7 @@ export default function Card(props) {
                   }
                   alt="mdo"
                   width="40"
+                  loading="lazy"
                   referrerPolicy="no-referrer"
                   height="40"
                   className="rounded-circle"

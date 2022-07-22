@@ -46,7 +46,13 @@ export default function CaRdView() {
         <LoadingPage />
       ) : data ? (
         <div>
-          <ReactToPrint
+          
+          <div>
+            <div className="">
+              {/* Solicitação de serviço */}
+              {data.ss   && (
+                <div>
+                  <ReactToPrint
             trigger={() => (
               <button type="button" className="btn btn-outline-primary">
                 <svg
@@ -79,10 +85,6 @@ export default function CaRdView() {
             )}
             content={() => componentRef.current}
           />
-          <div>
-            <div className="">
-              {/* Solicitação de serviço */}
-              {data.ss && (
                 <div ref={componentRef}>
                   <div className="border mt-2 rounded-2 mx-2 text-center">
                     <h1 className="text-black m-2">Solicitação de Serviço</h1>
@@ -180,11 +182,10 @@ export default function CaRdView() {
                         [10, 10, 10, 0], // top/right eye
                         [10, 0, 10, 10], // bottom/left
                       ]}
-                      logoImage="/favicon.svg"
-                      logoWidth="50"
-                      size="200"
+                      size="250"
                     />
                   </div>
+                </div>
                 </div>
               )}
               {/* Ordem de serviço */}
@@ -299,9 +300,7 @@ export default function CaRdView() {
                       [10, 10, 10, 0], // top/right eye
                       [10, 0, 10, 10], // bottom/left
                     ]}
-                    logoImage="/favicon.svg"
-                    logoWidth="50"
-                    size="200"
+                    size="250"
                   />
                 </div>
               </div>

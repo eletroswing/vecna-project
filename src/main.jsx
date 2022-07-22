@@ -9,6 +9,8 @@ import Machine from './pages/machineName';
 import User from './pages/UserPage';
 import Table from './pages/Table'
 import Register from './pages/Register'
+import NotificationsEdit from './pages/Notification'
+import News from './pages/News'
 
 import ListMachines from './pages/ListMachines';
 
@@ -25,6 +27,10 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       />
       <Navbar />
       <Routes>
+        <Route path="/news/*" element={<News />} />
+
+        <Route path="/notification/*" element={<NotificationsEdit />} />
+
         <Route path="/:user/*" element={<User />} />
           <Route path="/:user/:machineName" element={<Machine />} />
             <Route path="/:user/:machineName/historico" element={<Table />} />

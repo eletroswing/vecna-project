@@ -21,11 +21,7 @@ function ActionLogin() {
         className="btn btn-outline-light me-2 justify-content-center"
         onClick={MakeLogin}
       >
-        <img
-          width="20px"
-          className="me-2"
-          src="/google.svg"
-        />
+        <img width="20px" className="me-2" src="/google.svg" />
         Entrar com Google
       </button>
     </div>
@@ -54,17 +50,39 @@ function MakeLogout(e) {
   }
 }
 
-function ReturnLinks({ className }) {
+function ReturnLinksHandleClick(e){
+  document.location = e.target.dataset.to
+}
+
+function ReturnLinks({ className, isSideMenu }) {
   const location = useLocation();
 
   const links = [
     { name: "Máquinas", to: "/" },
     { name: "Perfil", to: "/me" },
+    { name: "News", to: "/news"}
   ];
 
   return (
     <div className={className}>
       {links.map((e) => {
+       if(isSideMenu){
+        if (location.pathname === e.to) {
+          return (
+            <div key={e.to}>
+              <button type="button" className="btn btn-light mt-3 mb-2 w-100">{e.name}</button>
+            </div>
+          )
+        } else {
+          return (
+            <div key={e.to}>
+              <button type="button" data-to={e.to} className="btn btn-outline-light mt-3 mb-2 w-100" onClick={ReturnLinksHandleClick}>{e.name}</button>
+            </div>
+          ) 
+        }
+       
+       }
+       else{
         if (location.pathname === e.to) {
           return (
             <Link
@@ -88,6 +106,7 @@ function ReturnLinks({ className }) {
             </Link>
           );
         }
+       }
       })}
     </div>
   );
@@ -127,6 +146,11 @@ function ActionProfile() {
             >
               Criar Nova Máquina
             </a>
+          </li>
+          <li>
+            <Link to="/notification" className="dropdown-item">
+              Notificações
+            </Link>
           </li>
           <li>
             <hr className="dropdown-divider" />
@@ -249,9 +273,6 @@ export default function Navbar() {
   const CreateMachine = async (e = null) => {
     if (e == null || e == undefined) return;
 
-    //FIXME: Bug - quando é enviado somente imagens do carrossel, as imagens nao são mostradas - bug await 
-    //FIXME: Bug - O icone de perfil demora muito pra carregar, botar um loading enqunato é carregado
-
     var PermEmails = [];
     var TableData = {};
     var Images = [];
@@ -347,14 +368,17 @@ export default function Navbar() {
             element.id.split(" ")[0] == "table" &&
             element.id.split(" ")[1] == "title"
           ) {
-            TableData[element.id.split(" ")[2]] = {title: element.value, child: []};
+            TableData[element.id.split(" ")[2]] = {
+              title: element.value,
+              child: [],
+            };
           }
-  
+
           if (
             element.id.split(" ")[0] == "table" &&
             element.id.split(" ")[1] == "info"
           ) {
-            TableData[element.id.split(" ")[2]].child.push(element.value)
+            TableData[element.id.split(" ")[2]].child.push(element.value);
           }
           if (element.id == "thumbnail") {
             setLoadingPercentage(70);
@@ -425,6 +449,27 @@ export default function Navbar() {
 
   return (
     <div id="Container">
+      <div
+        className="offcanvas offcanvas-start text-bg-dark"
+        tabIndex="-1"
+        id="offcanvasExample"
+        aria-labelledby="offcanvasExampleLabel"
+      >
+        <div className="offcanvas-header">
+          <h5 className="offcanvas-title" id="offcanvasExampleLabel">
+            Menu
+          </h5>
+          <button
+            type="button"
+            className="btn-close btn-close-white"
+            data-bs-dismiss="offcanvas"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div className="offcanvas-body">
+          <ReturnLinks isSideMenu />
+        </div>
+      </div>
       <div
         className="modal fade"
         data-bs-backdrop="static"
@@ -771,11 +816,10 @@ export default function Navbar() {
             <div className="nav col-auto me-auto mb-2 justify-content-center mb-md-0 px-3">
               <a
                 className="btn btn-outline-dark text-white-50 d-block d-sm-none"
-                data-bs-toggle="collapse"
-                href="#collapseExample"
+                data-bs-toggle="offcanvas"
+                href="#offcanvasExample"
                 role="button"
-                aria-expanded="false"
-                aria-controls="collapseExample"
+                aria-controls="offcanvasExample"
               >
                 <svg
                   width="32px"

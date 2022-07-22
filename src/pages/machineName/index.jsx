@@ -141,7 +141,7 @@ export default function Machine() {
   const [owner, setOwner] = React.useState({});
   const [machine, setMachine] = React.useState({});
 
-  const [is3d, set3d] = React.useState(true);
+  const [is3d, set3d] = React.useState(false);
   const [have3dImage, setHave3dImage] = React.useState(false);
   const [haveImages, setHaveImages] = React.useState(false);
 
@@ -153,6 +153,7 @@ export default function Machine() {
   const [tableChilds, setTableChilds] = React.useState([]);
 
   const [ImageList, setList] = React.useState([]);
+  const [tempImage, setTempImage] = React.useState("")
 
   const [AnulateSS, setAnulateSS] = React.useState(false);
   const closeRegisterModal = React.createRef();
@@ -228,23 +229,38 @@ export default function Machine() {
     if (!isValidHttpUrl(link)) {
       let data = await Load(machine.glb);
       setLink(data);
+      set3d(true)
       setHave3dImage(true);
     }
   };
 
   const GetImages = async () => {
-    setList([...machine.images]);
-    let imagelist = [];
-    machine.images.forEach(async (image) => {
-      if (!isValidHttpUrl(image)) {
-        let data = await Load(image);
-        imagelist.push(data);
-      }
-    });
+    if(machine.images){
+      machine.images.forEach(async (image) => {
+        if (!isValidHttpUrl(image)) {
+          let reference = ref(storage, image);
+          getDownloadURL(reference).then((e)=> {
+            setTempImage(e)
+          });
+        }
+      });
+      
+      setHaveImages(true);
 
-    setList(imagelist);
-    setHaveImages(true);
+    }
   };
+
+  React.useEffect(() => {
+    if(tempImage){
+      setList([...ImageList, tempImage])
+    }else{
+      setList([])
+    }
+  }, [tempImage])
+
+  React.useEffect(() => {
+    GetImages();
+  } ,[LastMods])
 
   React.useEffect(() => {
     if (machine) {
@@ -253,9 +269,6 @@ export default function Machine() {
         Get3d();
       }
       //load downloads urls for images
-      if (machine.images) {
-        GetImages();
-      }
     }
     GetLastMod();
 
@@ -383,7 +396,7 @@ export default function Machine() {
                       <ModelViwer glb={link} />
                     )
                   ) : haveImages ? (
-                    <Carroussel images={ImageList} />
+                    ImageList.length == 0? <LoadingPage /> : <Carroussel images={ImageList} />
                   ) : (
                     <ModelViwer glb={link} />
                   )
