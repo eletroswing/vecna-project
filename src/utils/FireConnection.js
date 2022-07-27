@@ -17,7 +17,7 @@ import { getStorage, ref, uploadBytes, deleteObject  } from "firebase/storage";
 
 //TODO: change to production
 //Prod
-/*const firebaseConfig = {
+const firebaseConfig = {
   apiKey: "AIzaSyBYt1PEtXUBHzTlqEEv47e9iSzaEBSLiro",
   authDomain: "vecna-project.firebaseapp.com",
   projectId: "vecna-project",
@@ -26,10 +26,10 @@ import { getStorage, ref, uploadBytes, deleteObject  } from "firebase/storage";
   appId: "1:885079794024:web:fd88909dbe22471bf4f6dd",
   measurementId: "G-ECE613MR24",
 };
-*/
+
 
 //Dev
-const firebaseConfig = {
+/*const firebaseConfig = {
   apiKey: "AIzaSyCSJHk2p6SC9fc9TZT7gkeVzNP53LsiHwM",
   authDomain: "vecna-project-dev.firebaseapp.com",
   projectId: "vecna-project-dev",
@@ -37,7 +37,7 @@ const firebaseConfig = {
   messagingSenderId: "939989981341",
   appId: "1:939989981341:web:da81de633f2ae7aaa09c74",
   measurementId: "G-6NFLV9X2FM"
-};
+};*/
 
 async function GetAllMachines(database = "machines") {
   var data = [];

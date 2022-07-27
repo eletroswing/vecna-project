@@ -1128,7 +1128,8 @@ export default function Machine() {
                       </div>
                       <div className="modal-footer">
                         <button
-                          type="button"
+                          type="reset"
+                          form="form_register"
                           className="btn btn-secondary"
                           data-bs-dismiss="modal"
                           ref={closeRegisterModal}
@@ -1149,7 +1150,7 @@ export default function Machine() {
                         <span className="sr-only"></span>
                       </div>
                     ) : (
-                      "Criar máquina"
+                      "Adicionar registro"
                     )}
                         </button>
                       </div>
