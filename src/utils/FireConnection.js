@@ -13,9 +13,11 @@ import {
   deleteDoc
 } from "firebase/firestore/lite";
 
-import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject  } from "firebase/storage";
+import { getStorage, ref, uploadBytes, deleteObject  } from "firebase/storage";
 
-const firebaseConfig = {
+//TODO: change to production
+//Prod
+/*const firebaseConfig = {
   apiKey: "AIzaSyBYt1PEtXUBHzTlqEEv47e9iSzaEBSLiro",
   authDomain: "vecna-project.firebaseapp.com",
   projectId: "vecna-project",
@@ -23,6 +25,18 @@ const firebaseConfig = {
   messagingSenderId: "885079794024",
   appId: "1:885079794024:web:fd88909dbe22471bf4f6dd",
   measurementId: "G-ECE613MR24",
+};
+*/
+
+//Dev
+const firebaseConfig = {
+  apiKey: "AIzaSyCSJHk2p6SC9fc9TZT7gkeVzNP53LsiHwM",
+  authDomain: "vecna-project-dev.firebaseapp.com",
+  projectId: "vecna-project-dev",
+  storageBucket: "vecna-project-dev.appspot.com",
+  messagingSenderId: "939989981341",
+  appId: "1:939989981341:web:da81de633f2ae7aaa09c74",
+  measurementId: "G-6NFLV9X2FM"
 };
 
 async function GetAllMachines(database = "machines") {
@@ -137,6 +151,7 @@ async function DeleteMedia(storage, reference){
     await deleteObject(MediaRef)
     return
   }catch(e){
+    console.warn(e)
     return e
   }
 }

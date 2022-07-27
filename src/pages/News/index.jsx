@@ -5,7 +5,7 @@ export default function News() {
     <div style={{overflowX: "hidden"}}>
       <div className="container col-xxl-8 px-4 pt-5">
         <div className="row flex-lg-row-reverse align-items-center g-5 py-5">
-          <div className="col-10 col-sm-8 col-lg-6 ">
+          <div className="col-10 col-sm-8 col-lg-6">
             <img
               src="https://getbootstrap.com/docs/5.2/examples/heroes/bootstrap-themes.png"
               className="d-block mx-lg-auto img-fluid"
@@ -143,7 +143,7 @@ export default function News() {
           </div>
         </div>
       </div>
-      <div className="d-flex justify-content-center">
+      <div className="d-flex justify-content-center text-center">
       <p><em><mark>Sistema de precificação ainda em desenvolvimento e em planejamento</mark></em></p>
 
       </div>

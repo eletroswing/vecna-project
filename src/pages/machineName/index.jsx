@@ -32,7 +32,8 @@ function isValidHttpUrl(string) {
 
   try {
     url = new URL(string);
-  } catch (_) {
+  } catch (e) {
+    console.warn(e);
     return false;
   }
 
@@ -76,6 +77,9 @@ function Carroussel(props) {
                     height="400"
                     role="img"
                     className="bd-placeholder-img bd-placeholder-img-lg d-block w-100"
+                    style={{
+                      objectFit: "contain",
+                    }}
                     src={image}
                   />
                 </div>
@@ -139,7 +143,9 @@ export default function Machine() {
   let userData = useFirebaseAuth();
   let { user, machineName } = useParams();
   const [owner, setOwner] = React.useState({});
+  const [notificationArray, setNotificationArray] = React.useState([]);
   const [machine, setMachine] = React.useState({});
+  const [loadingNotButton, setLoadingNotButton] = React.useState(false);
 
   const [is3d, set3d] = React.useState(false);
   const [have3dImage, setHave3dImage] = React.useState(false);
@@ -153,14 +159,34 @@ export default function Machine() {
   const [tableChilds, setTableChilds] = React.useState([]);
 
   const [ImageList, setList] = React.useState([]);
-  const [tempImage, setTempImage] = React.useState("")
+  const [tempImage, setTempImage] = React.useState("");
 
   const [AnulateSS, setAnulateSS] = React.useState(false);
-  const closeRegisterModal = React.createRef();
+  const closeRegisterModal = React.useRef();
 
   const [getLastInfo, setLastInfo] = React.useState(0);
 
   const [LastMods, setLastMods] = React.useState([]);
+
+  const [loadingCreateRegister, setLoadingCreateRegister] = React.useState(false);
+
+
+  const GetAuthenticatedProfile = async () => {
+    setLoadingNotButton(true);
+    try {
+      if (userData) {
+        let data = await GetData(userData.uid, "users");
+        setNotificationArray(data.NotificationIDS ? data.NotificationIDS : []);
+      } else {
+        setNotificationArray([]);
+      }
+    } catch (e) {
+      console.warn(e);
+      setPageState("error");
+    } finally {
+      setLoadingNotButton(false);
+    }
+  };
 
   const GetUserProfile = async () => {
     try {
@@ -175,6 +201,7 @@ export default function Machine() {
         }
       }
     } catch (e) {
+      console.warn(e);
       setPageState("error");
     }
   };
@@ -191,6 +218,7 @@ export default function Machine() {
         }
       }
     } catch (e) {
+      console.warn(e);
       setPageState("error");
     }
   };
@@ -200,20 +228,27 @@ export default function Machine() {
       if (machine.id) {
         let data = [];
         const docRef = collection(firestore, "registers");
-        const docSnap = query(docRef, where("machineId", "==", `${machine.id}`));
+        const docSnap = query(
+          docRef,
+          where("machineId", "==", `${machine.id}`)
+        );
         const docs = await getDocs(docSnap);
         docs.forEach((e) => {
           let dt = e.data();
           data.push(dt);
         });
 
-        data.sort((a, b) => a.createdTimestamp.toDate() - b.createdTimestamp.toDate());
-        data.reverse()
-        let temp = data.slice(0, 3)
-        data = temp
+        data.sort(
+          (a, b) => a.createdTimestamp.toDate() - b.createdTimestamp.toDate()
+        );
+        data.reverse();
+        let temp = data.slice(0, 3);
+        data = temp;
         setLastMods(data);
       }
-    } catch (e) {}
+    } catch (e) {
+      console.warn(e);
+    }
   };
   React.useEffect(() => {
     GetUserProfile();
@@ -229,38 +264,41 @@ export default function Machine() {
     if (!isValidHttpUrl(link)) {
       let data = await Load(machine.glb);
       setLink(data);
-      set3d(true)
+      set3d(true);
       setHave3dImage(true);
     }
   };
 
   const GetImages = async () => {
-    if(machine.images){
+    if (machine.images) {
       machine.images.forEach(async (image) => {
         if (!isValidHttpUrl(image)) {
           let reference = ref(storage, image);
-          getDownloadURL(reference).then((e)=> {
-            setTempImage(e)
+          getDownloadURL(reference).then((e) => {
+            setTempImage(e);
           });
         }
       });
-      
-      setHaveImages(true);
 
+      setHaveImages(true);
     }
   };
 
   React.useEffect(() => {
-    if(tempImage){
-      setList([...ImageList, tempImage])
-    }else{
-      setList([])
+    if (tempImage) {
+      setList([...ImageList, tempImage]);
+    } else {
+      setList([]);
     }
-  }, [tempImage])
+  }, [tempImage]);
 
   React.useEffect(() => {
     GetImages();
-  } ,[LastMods])
+  }, [LastMods]);
+
+  React.useEffect(() => {
+    GetAuthenticatedProfile();
+  }, [userData]);
 
   React.useEffect(() => {
     if (machine) {
@@ -294,8 +332,9 @@ export default function Machine() {
 
   const AddRegister = async (e) => {
     e.preventDefault();
+    setLoadingCreateRegister(true)
     try {
-      if(!userData) throw new Error("not authenticated")
+      if (!userData) throw new Error("not authenticated");
       let data = [...e.target];
 
       let Info = {};
@@ -325,11 +364,13 @@ export default function Machine() {
         Info.ss = Ss;
       }
 
+      let date = new Date()
       let NewId = v4() + v4();
       Info.id = NewId;
       Info.ownerId = userData.uid;
       Info.machineId = machine.id;
       Info.ownerEmail = userData.email;
+      Info.lastNotification = date;
 
       if (
         machine.ownerId == userData.uid ||
@@ -349,6 +390,7 @@ export default function Machine() {
       });
       closeRegisterModal.current.click();
     } catch (e) {
+      console.warn(e);
       toast.error("Erro ao Adicionar Registro!", {
         duration: 3000,
         style: {
@@ -356,8 +398,73 @@ export default function Machine() {
           color: "#fff",
         },
       });
+    }finally{
+      setLoadingCreateRegister(false)
     }
   };
+
+  const Notifyme = (e) => {
+    e.preventDefault();
+    toast("Confira suas configurações de notificação", {
+      duration: 3000,
+      icon: "🔔",
+      style: {
+        background: "#333",
+        color: "#fff",
+      },
+    });
+
+    if (!userData) {
+      toast("Precisa de Log-In!", {
+        duration: 3000,
+        icon: "😭",
+        style: {
+          background: "#333",
+          color: "#fff",
+        },
+      });
+    } else {
+      if (!notificationArray.includes(machineName)) {
+        let list = [...notificationArray, machineName];
+        setNotificationArray(list);
+      }
+    }
+  };
+
+  const RemoveNotification = (e) => {
+    e.preventDefault();
+    if (!userData) {
+      toast("Precisa de Log-In!", {
+        duration: 3000,
+        icon: "😭",
+        style: {
+          background: "#333",
+          color: "#fff",
+        },
+      });
+    } else {
+      if (notificationArray.includes(machineName)) {
+        let list = [...notificationArray];
+        list.splice(list.indexOf(machineName, 1));
+        setNotificationArray(list);
+      }
+    }
+  };
+
+  React.useEffect(() => {
+    if (userData) {
+      setLoadingNotButton(true);
+      CreateOrUpdateData(
+        userData.uid,
+        {
+          NotificationIDS: notificationArray,
+        },
+        "users"
+      ).then(() => {
+        setLoadingNotButton(false);
+      });
+    }
+  }, [notificationArray]);
 
   return (
     <div>
@@ -396,7 +503,11 @@ export default function Machine() {
                       <ModelViwer glb={link} />
                     )
                   ) : haveImages ? (
-                    ImageList.length == 0? <LoadingPage /> : <Carroussel images={ImageList} />
+                    ImageList.length == 0 ? (
+                      <LoadingPage />
+                    ) : (
+                      <Carroussel images={ImageList} />
+                    )
                   ) : (
                     <ModelViwer glb={link} />
                   )
@@ -424,90 +535,31 @@ export default function Machine() {
               </div>
               <div className="d-flex flex-column flex-lg-row mt-3 w-full">
                 {/* table of prev manut */}
-                {LastMods[0] && <div className="m-lg-auto mx-2">
-                 <select
-                    className="form-select form-select-sm mb-2"
-                    aria-label=".form-select-sm example"
-                    value={getLastInfo}
-                    onChange={(e) => {
-                      setLastInfo(e.target.value);
-                    }}
-                  >
-                    {LastMods[0] && <option value="0">Ultima manutenção</option>}
-                    {LastMods[1] && <option value="1">Penultima manutenção</option>}
-                    {LastMods[2] && <option value="2">Anti-Penultiuma  manutenção</option>}
-                    
-                  </select>
-                  <div className="mb-5">
-                    <RegisterComponent data={LastMods[getLastInfo]} />
+                {LastMods[0] && (
+                  <div className="m-lg-auto mx-2">
+                    <select
+                      className="form-select form-select-sm mb-2"
+                      aria-label=".form-select-sm example"
+                      value={getLastInfo}
+                      onChange={(e) => {
+                        setLastInfo(e.target.value);
+                      }}
+                    >
+                      {LastMods[0] && (
+                        <option value="0">Ultima manutenção</option>
+                      )}
+                      {LastMods[1] && (
+                        <option value="1">Penultima manutenção</option>
+                      )}
+                      {LastMods[2] && (
+                        <option value="2">Anti-Penultiuma manutenção</option>
+                      )}
+                    </select>
+                    <div className="mb-5">
+                      <RegisterComponent data={LastMods[getLastInfo]} />
+                    </div>
                   </div>
-
-                </div>}
-                {/* table of next manut 
-                <div className="m-lg-auto mx-2">
-                  <select
-                    className="form-select form-select-sm mb-2"
-                    aria-label=".form-select-sm example"
-                  >
-                    <option value="1">Proxima manutenção</option>
-                    <option value="2">Segunda próxima manutenção</option>
-                    <option value="3">Terceita próxima manutenção</option>
-                  </select>
-                  <table className="table table-striped-columns w-full">
-                    <thead>
-                      <tr>
-                        <th scope="col">#</th>
-                        <th scope="col">First</th>
-                        <th scope="col">Last</th>
-                        <th scope="col">Handle</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <th scope="row">1</th>
-                        <td>Mark</td>
-                        <td>Otto</td>
-                        <td>@mdo</td>
-                      </tr>
-                      <tr>
-                        <th scope="row">1</th>
-                        <td>Mark</td>
-                        <td>Otto</td>
-                        <td>@mdo</td>
-                      </tr>
-                      <tr>
-                        <th scope="row">1</th>
-                        <td>Mark</td>
-                        <td>Otto</td>
-                        <td>@mdo</td>
-                      </tr>
-                      <tr>
-                        <th scope="row">1</th>
-                        <td>Mark</td>
-                        <td>Otto</td>
-                        <td>@mdo</td>
-                      </tr>
-                      <tr>
-                        <th scope="row">1</th>
-                        <td>Mark</td>
-                        <td>Otto</td>
-                        <td>@mdo</td>
-                      </tr>
-                      <tr>
-                        <th scope="row">1</th>
-                        <td>Mark</td>
-                        <td>Otto</td>
-                        <td>@mdo</td>
-                      </tr>
-                      <tr>
-                        <th scope="row">2</th>
-                        <td>Jacob</td>
-                        <td>Thornton</td>
-                        <td>@fat</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>*/}
+                )}
               </div>
               <div id="info" className="d-flex flex-column f  lex-lg-row">
                 <div className="m-auto">
@@ -524,12 +576,51 @@ export default function Machine() {
                   </a>
                 </div>
                 <div className="m-auto">
-                  <button
-                    type="button"
-                    className="btn btn-outline-warning w-full mt-3 mt-lg-2 mb-5"
-                  >
-                    Notificarme da próxima manutenção
-                  </button>
+                  {loadingNotButton ? (
+                    <button
+                      type="button"
+                      disabled
+                      className="btn btn-outline-warning w-full mt-3 mt-lg-2 mb-5"
+                    >
+                      <div
+                        className="spinner-border text-primary spinner-border-sm"
+                        role="status"
+                      >
+                        <span className="sr-only"></span>
+                      </div>
+                    </button>
+                  ) : notificationArray.length != 0 &&
+                    notificationArray.includes(machineName) ? (
+                    <button
+                      type="button"
+                      className="btn btn-outline-warning w-full mt-3 mt-lg-2 mb-5"
+                      onClick={RemoveNotification}
+                    >
+                      <svg
+                        className="me-1"
+                        width="1em"
+                        height="1em"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          fill="none"
+                          stroke="#6fff00"
+                          strokeWidth="2"
+                          d="m2 14 7 6L22 4"
+                        />
+                      </svg>{" "}
+                      Você será notificado dessa maquina
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="btn btn-outline-success w-full mt-3 mt-lg-2 mb-5"
+                      onClick={Notifyme}
+                    >
+                      Notificarme da próxima manutenção
+                    </button>
+                  )}
                 </div>
               </div>
               {tableInfo.length != 0 && (
@@ -627,14 +718,21 @@ export default function Machine() {
                 >
                   Compartilhar
                 </button>
-                <button
-                  type="button"
-                  className="btn btn-outline-success m-2"
-                  data-bs-toggle="modal"
-                  data-bs-target="#AddRegister"
-                >
-                  Adicionar registro
-                </button>
+
+                {Object.keys(machine).length != 0 &&
+                  userData &&
+                  (machine.ownerId == userData.uid ||
+                    (machine &&
+                      machine.permissions.includes(userData.email))) && (
+                    <button
+                      type="button"
+                      className="btn btn-outline-success m-2"
+                      data-bs-toggle="modal"
+                      data-bs-target="#AddRegister"
+                    >
+                      Adicionar registro
+                    </button>
+                  )}
               </div>
               <div
                 className="modal fade"
@@ -932,6 +1030,45 @@ export default function Machine() {
                                 />
                               </div>
                               <div className="d-flex input-group mt-3">
+                                <label
+                                  className="input-group-text"
+                                >
+                                  Expira em
+                                </label>
+                                <select
+                                  className="form-select"
+                                  id="os expires_day"
+                                >
+                                  <option defaultValue value="1">
+                                    1
+                                  </option>
+                                  <option value="2">2</option>
+                                  <option value="3">3</option>
+                                  <option value="4">4</option>
+                                  <option value="5">5</option>
+                                  <option value="6">6</option>
+                                  <option value="7">7</option>
+                                  <option value="8">8</option>
+                                  <option value="9">9</option>
+                                  <option value="10">10</option>
+                                  <option value="11">11</option>
+                                  <option value="12">12</option>
+                                  <option value="13">13</option>
+                                  <option value="14">14</option>
+                                  <option value="15">15</option>
+                                </select>
+                                <select
+                                  className="form-select"
+                                  id="os expires_time"
+                                >
+                                  <option value="1">dia(s)</option>
+                                  <option defaultValue value="2">
+                                    semana(as)
+                                  </option>
+                                  <option value="3">mês(es)</option>
+                                </select>
+                              </div>
+                              <div className="d-flex input-group mt-3">
                                 <span
                                   className="input-group-text"
                                   id="inputGroup-sizing-default"
@@ -1002,8 +1139,18 @@ export default function Machine() {
                           type="submit"
                           form="form_register"
                           className="btn btn-primary"
+                          disabled={loadingCreateRegister}
                         >
-                          Adicionar Registro
+                          {loadingCreateRegister ? (
+                      <div
+                        className="spinner-border text-light spinner-border-sm"
+                        role="status"
+                      >
+                        <span className="sr-only"></span>
+                      </div>
+                    ) : (
+                      "Criar máquina"
+                    )}
                         </button>
                       </div>
                     </div>

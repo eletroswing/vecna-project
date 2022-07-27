@@ -11,8 +11,8 @@ import { CreateOrUpdateData, UploadFile } from "../../utils/FireConnection";
 import { v4 } from "uuid";
 
 function ActionLogin() {
-  const MakeLogin = () => {
-    Login();
+  const MakeLogin = async () => {
+    await Login();
   };
   return (
     <div className="text-end">
@@ -50,8 +50,8 @@ function MakeLogout(e) {
   }
 }
 
-function ReturnLinksHandleClick(e){
-  document.location = e.target.dataset.to
+function ReturnLinksHandleClick(e) {
+  document.location = e.target.dataset.to;
 }
 
 function ReturnLinks({ className, isSideMenu }) {
@@ -60,53 +60,60 @@ function ReturnLinks({ className, isSideMenu }) {
   const links = [
     { name: "Máquinas", to: "/" },
     { name: "Perfil", to: "/me" },
-    { name: "News", to: "/news"}
+    { name: "News", to: "/news" },
   ];
 
   return (
     <div className={className}>
       {links.map((e) => {
-       if(isSideMenu){
-        if (location.pathname === e.to) {
-          return (
-            <div key={e.to}>
-              <button type="button" className="btn btn-light mt-3 mb-2 w-100">{e.name}</button>
-            </div>
-          )
+        if (isSideMenu) {
+          if (location.pathname === e.to) {
+            return (
+              <div key={e.to}>
+                <button type="button" className="btn btn-light mt-3 mb-2 w-100">
+                  {e.name}
+                </button>
+              </div>
+            );
+          } else {
+            return (
+              <div key={e.to}>
+                <button
+                  type="button"
+                  data-to={e.to}
+                  className="btn btn-outline-light mt-3 mb-2 w-100"
+                  onClick={ReturnLinksHandleClick}
+                >
+                  {e.name}
+                </button>
+              </div>
+            );
+          }
         } else {
-          return (
-            <div key={e.to}>
-              <button type="button" data-to={e.to} className="btn btn-outline-light mt-3 mb-2 w-100" onClick={ReturnLinksHandleClick}>{e.name}</button>
-            </div>
-          ) 
+          if (location.pathname === e.to) {
+            return (
+              <Link
+                key={e.to}
+                className="nav-link text-white active"
+                aria-current="page"
+                to={e.to}
+              >
+                {e.name}
+              </Link>
+            );
+          } else {
+            return (
+              <Link
+                key={e.to}
+                className="nav-link text-white-50"
+                aria-current="page"
+                to={e.to}
+              >
+                {e.name}
+              </Link>
+            );
+          }
         }
-       
-       }
-       else{
-        if (location.pathname === e.to) {
-          return (
-            <Link
-              key={e.to}
-              className="nav-link text-white active"
-              aria-current="page"
-              to={e.to}
-            >
-              {e.name}
-            </Link>
-          );
-        } else {
-          return (
-            <Link
-              key={e.to}
-              className="nav-link text-white-50"
-              aria-current="page"
-              to={e.to}
-            >
-              {e.name}
-            </Link>
-          );
-        }
-       }
       })}
     </div>
   );
@@ -148,8 +155,8 @@ function ActionProfile() {
             </a>
           </li>
           <li>
-            <Link to="/notification" className="dropdown-item">
-              Notificações
+            <Link to="/config" className="dropdown-item">
+              Configurações
             </Link>
           </li>
           <li>
@@ -260,6 +267,8 @@ export default function Navbar() {
   const [accordInput, setAccordInput] = React.useState([]);
   const [oilInformation, setOilInformation] = React.useState([]);
 
+  const [loadingCreateMachine, setLoadingCreateMachine] = React.useState(false);
+
   const FilesRef = React.createRef();
   const ModelRef = React.createRef();
 
@@ -272,7 +281,7 @@ export default function Navbar() {
 
   const CreateMachine = async (e = null) => {
     if (e == null || e == undefined) return;
-
+    setLoadingCreateMachine(true);
     var PermEmails = [];
     var TableData = {};
     var Images = [];
@@ -405,6 +414,7 @@ export default function Navbar() {
       let newId = v4() + v4() + v4() + v4();
       setLoadingPercentage(90);
       setLoadingText("Gerando os dados...");
+      let currentDate = new Date();
       DataToCreate = {
         permissions: PermEmails,
         tableInformation: TableData,
@@ -417,6 +427,7 @@ export default function Navbar() {
         id: newId,
         ownerId: user.uid,
         ownerEmail: user.email,
+        lastNotification: currentDate,
       };
 
       setLoadingPercentage(99);
@@ -435,6 +446,7 @@ export default function Navbar() {
         },
       });
     } catch (e) {
+      console.warn(e);
       setLoadingPercentage(0);
       setModalLoading(false);
       toast.error("Houve um erro ao criar a máquina!", {
@@ -444,6 +456,8 @@ export default function Navbar() {
           color: "#fff",
         },
       });
+    } finally {
+      setLoadingCreateMachine(false);
     }
   };
 
@@ -801,8 +815,22 @@ export default function Navbar() {
                   >
                     Fechar
                   </button>
-                  <button type="submit" form="form" className="btn btn-primary">
-                    Criar máquina
+                  <button
+                    type="submit"
+                    disabled={loadingCreateMachine}
+                    form="form"
+                    className="btn btn-primary"
+                  >
+                    {loadingCreateMachine ? (
+                      <div
+                        className="spinner-border text-primary spinner-border-sm"
+                        role="status"
+                      >
+                        <span className="sr-only"></span>
+                      </div>
+                    ) : (
+                      "Criar máquina"
+                    )}
                   </button>
                 </div>
               </div>

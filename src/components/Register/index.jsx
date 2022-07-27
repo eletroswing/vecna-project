@@ -8,7 +8,8 @@ export default function RegisterComponent(props) {
   const [ownerData, setOwnerData] = React.useState({});
   const [machineData, setMachineData] = React.useState({});
   const [machineOwner, setMachineOwner] = React.useState({});
-  const closemodal = React.createRef();
+  const closemodal = React.useRef();
+  let [isDeleting, setIsDeleting] = React.useState(false);
 
   const GetAuthor = async () => {
     let data = await GetData(props.data.ownerId, "users");
@@ -62,7 +63,9 @@ export default function RegisterComponent(props) {
             <div>
               <div className="modal-body">
                 <h3>Deseja Excluir este registro?</h3>
-                <div className="d-flex justify-content-end">
+              </div>
+              <div className="modal-footer">
+              <div className="d-flex justify-content-end">
                   <button
                     type="button"
                     data-bs-dismiss="modal"
@@ -74,13 +77,15 @@ export default function RegisterComponent(props) {
                   <button
                     type="button"
                     className="btn btn-outline-danger ms-2 me-2"
+                    disabled={isDeleting}
                     onClick={async (e) => {
+                      setIsDeleting(true)
                       e.preventDefault();
                       try {
                         await Delete("registers", props.data.id);
-                        closemodal.current.click();
                         window.location = window.location.href;
                       } catch (e) {
+                        console.warn(e)
                         toast.error("Erro ao Deletar Registro!", {
                           duration: 3000,
                           style: {
@@ -88,21 +93,24 @@ export default function RegisterComponent(props) {
                             color: "#fff",
                           },
                         });
+                      }finally{
+                        setIsDeleting(false)
+                        closemodal.current.click();
                       }
                     }}
                   >
-                    Deletar
+                    {isDeleting ? (
+                      <div
+                        className="spinner-border text-primary spinner-border-sm"
+                        role="status"
+                      >
+                        <span className="sr-only"></span>
+                      </div>
+                    ) : (
+                      "Deletar"
+                    )}
                   </button>
                 </div>
-              </div>
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  data-bs-dismiss="modal"
-                >
-                  Fechar
-                </button>
               </div>
             </div>
           </div>
@@ -127,6 +135,7 @@ export default function RegisterComponent(props) {
                     className="mr-1 "
                     width="15"
                     height="15"
+                    loading="lazy"
                     id="star"
                   />{" "}
                   <span className="vl mr-2 ml-0"></span>
@@ -162,10 +171,10 @@ export default function RegisterComponent(props) {
                   <a href={`/${ownerData.uid}`}>
                     <img
                     src={ownerData.picture}
-                    alt="DP"
                     referrerPolicy="no-referrer"
                     className="  rounded-circle img-fluid "
                     width="35"
+                    loading="lazy"
                     height="35"
                   />
                   </a>

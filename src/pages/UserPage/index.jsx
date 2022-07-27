@@ -101,7 +101,9 @@ function Dashboard(props) {
       data.sort((a, b) => a.createdTimestamp.toDate() - b.createdTimestamp.toDate());
         data.reverse()
       setRegister(data);
-    } catch (e) {}
+    } catch (e) {
+      console.warn(e)
+    }
   };
 
   const GetMachines = async () => {
@@ -120,7 +122,9 @@ function Dashboard(props) {
       data.sort((a, b) => a.createdTimestamp.toDate() - b.createdTimestamp.toDate());
         data.reverse()
       setCards(data);
-    } catch (e) {}
+    } catch (e) {
+      console.warn(e)
+    }
   };
 
   const GetPermMachines = async () => {
@@ -139,7 +143,9 @@ function Dashboard(props) {
       data.sort((a, b) => a.createdTimestamp.toDate() - b.createdTimestamp.toDate());
         data.reverse()
       setPermissionCards(data);
-    } catch (e) {}
+    } catch (e) {
+      console.warn(e)
+    }
   };
 
   React.useEffect(() => {
@@ -210,7 +216,9 @@ export default function User() {
       } else {
         setPageState("error");
       }
-    } catch (e) {}
+    } catch (e) {
+      console.warn(e)
+    }
   };
 
   React.useEffect(() => {

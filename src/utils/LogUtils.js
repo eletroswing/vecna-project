@@ -4,7 +4,8 @@ import { auth } from './FireConnection';
 import {CreateOrUpdateData } from "./FireConnection"
 
 
-function Login() {
+async function Login() {
+
   let provider = new GoogleAuthProvider();
   signInWithPopup(auth, provider)
     .then( async (result) => {
@@ -25,6 +26,7 @@ function Login() {
       // ...
     })
     .catch((error) => {
+      console.warn(error)
       // Handle Errors here.
       const errorCode = error.code;
       const errorMessage = error.message;
@@ -44,6 +46,7 @@ function Logout() {
       return
     })
     .catch((error) => {
+      console.warn(error)
       return { error }
     });
 }
